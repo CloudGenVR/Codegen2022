@@ -34,11 +34,15 @@ builder.Services.AddFluentValidationRulesToSwagger();
 var app = builder.Build();
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    options.RoutePrefix = string.Empty;
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "PhotoGallery API v1");
+});
 
 app.UseHttpsRedirection();
 
-app.MapGet("/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] string? searchText) =>
+app.MapGet("/api/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] string? searchText) =>
 {
     var query = db.Photos.OrderBy(p => p.Name).AsQueryable();
 
@@ -53,7 +57,7 @@ app.MapGet("/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] s
 .Produces(StatusCodes.Status200OK, typeof(IEnumerable<Photo>))
 .WithName("GetPhotos");
 
-app.MapGet("/photos/{id:guid}", async (Guid id, AzureStorageService azureStorageService, PhotoGalleryDbContext db) =>
+app.MapGet("/api/photos/{id:guid}", async (Guid id, AzureStorageService azureStorageService, PhotoGalleryDbContext db) =>
 {
     var photo = await db.Photos.FindAsync(id);
     if (photo is null)
@@ -73,7 +77,7 @@ app.MapGet("/photos/{id:guid}", async (Guid id, AzureStorageService azureStorage
 .Produces(StatusCodes.Status404NotFound)
 .WithName("GetPhoto");
 
-app.MapGet("/photos/{id:guid}/comments", async (Guid id, PhotoGalleryDbContext db) =>
+app.MapGet("/api/photos/{id:guid}/comments", async (Guid id, PhotoGalleryDbContext db) =>
 {
     var photoExists = await db.Photos.AnyAsync(p => p.Id == id);
     if (!photoExists)
@@ -88,7 +92,7 @@ app.MapGet("/photos/{id:guid}/comments", async (Guid id, PhotoGalleryDbContext d
 .Produces(StatusCodes.Status404NotFound)
 .WithName("GetPhotoComments");
 
-app.MapGet("/photos/{photoId:guid}/comments/{commentId:guid}", async (Guid photoId, Guid commentId, PhotoGalleryDbContext db) =>
+app.MapGet("/api/photos/{photoId:guid}/comments/{commentId:guid}", async (Guid photoId, Guid commentId, PhotoGalleryDbContext db) =>
 {
     var comment = await db.Comments.FirstOrDefaultAsync(c => c.PhotoId == photoId && c.Id == commentId);
     if (comment is null)
@@ -102,7 +106,7 @@ app.MapGet("/photos/{photoId:guid}/comments/{commentId:guid}", async (Guid photo
 .Produces(StatusCodes.Status404NotFound)
 .WithName("GetPhotoComment");
 
-app.MapPost("photos", async (FormFileContent file, string? description, AzureStorageService storageService, PhotoGalleryDbContext db) =>
+app.MapPost("/api/photos", async (FormFileContent file, string? description, AzureStorageService storageService, PhotoGalleryDbContext db) =>
 {
     using var stream = file.Content.OpenReadStream();
 
@@ -131,7 +135,7 @@ app.MapPost("photos", async (FormFileContent file, string? description, AzureSto
 .Produces(StatusCodes.Status400BadRequest)
 .WithName("UploadPhoto");
 
-app.MapPost("/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
+app.MapPost("/api/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
 {
     var validationResult = validator.Validate(comment);
     if (!validationResult.IsValid)
@@ -166,7 +170,7 @@ app.MapPost("/photos/{id:guid}/comments", async (Guid id, NewComment comment, Ph
 .ProducesValidationProblem()
 .WithName("AddPhotoComment");
 
-app.MapDelete("/photos/{id:guid}", async (Guid id, AzureStorageService storageService, PhotoGalleryDbContext db) =>
+app.MapDelete("/api/photos/{id:guid}", async (Guid id, AzureStorageService storageService, PhotoGalleryDbContext db) =>
 {
     var photo = await db.Photos.FindAsync(id);
     if (photo is null)
@@ -185,7 +189,7 @@ app.MapDelete("/photos/{id:guid}", async (Guid id, AzureStorageService storageSe
 .Produces(StatusCodes.Status404NotFound)
 .WithName("DeletePhoto");
 
-app.MapDelete("/photos/{photoId:guid}/comments/{commentId:guid}", async (Guid photoId, Guid commentId, PhotoGalleryDbContext db) =>
+app.MapDelete("/api/photos/{photoId:guid}/comments/{commentId:guid}", async (Guid photoId, Guid commentId, PhotoGalleryDbContext db) =>
 {
     var comment = await db.Comments.FirstOrDefaultAsync(c => c.PhotoId == photoId && c.Id == commentId);
     if (comment is null)
