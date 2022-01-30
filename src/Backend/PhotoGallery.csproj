@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.10.0" />
+		<PackageReference Include="FluentValidation.AspNetCore" Version="10.3.6" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.1" />
 		<PackageReference Include="MimeMapping" Version="1.0.1.37" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />

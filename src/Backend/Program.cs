@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimeMapping;
@@ -18,6 +20,8 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
+
+builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<Program>());
 
 builder.Services.AddSqlServer<PhotoGalleryDbContext>(builder.Configuration.GetConnectionString("SqlConnection"));
 builder.Services.AddScoped<AzureStorageService>();
@@ -125,8 +129,17 @@ app.MapPost("photos", async (FormFileContent file, string? description, AzureSto
 .Produces(StatusCodes.Status201Created, typeof(Photo))
 .Produces(StatusCodes.Status400BadRequest);
 
-app.MapPut("/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db) =>
+app.MapPut("/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
 {
+    var validationResult = validator.Validate(comment);
+    if (!validationResult.IsValid)
+    {
+        var errors = validationResult.Errors.GroupBy(e => e.PropertyName)
+            .ToDictionary(k => k.Key, v => v.Select(e => e.ErrorMessage).ToArray());
+
+        return Results.ValidationProblem(errors);
+    }
+
     var photoExists = await db.Photos.AnyAsync(p => p.Id == id);
     if (!photoExists)
     {
@@ -148,6 +161,7 @@ app.MapPut("/photos/{id:guid}/comments", async (Guid id, NewComment comment, Pho
 })
 .Produces(StatusCodes.Status201Created, typeof(Comment))
 .Produces(StatusCodes.Status404NotFound)
+.ProducesValidationProblem()
 .WithName("AddPhotoComment");
 
 app.MapDelete("/photos/{id:guid}", async (Guid id, AzureStorageService storageService, PhotoGalleryDbContext db) =>
