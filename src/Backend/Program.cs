@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimeMapping;
 using PhotoGallery.DataAccessLayer;
@@ -10,6 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureAppConfiguration(app =>
 {
     app.AddJsonFile("appsettings.local.json", optional: true);
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
 builder.Services.AddSqlServer<PhotoGalleryDbContext>(builder.Configuration.GetConnectionString("SqlConnection"));
@@ -25,9 +32,16 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.MapGet("/photos", async (PhotoGalleryDbContext db) =>
+app.MapGet("/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] string? searchText) =>
 {
-    var photos = await db.Photos.OrderBy(p => p.Name).ToListAsync();
+    var query = db.Photos.OrderBy(p => p.Name).AsQueryable();
+
+    if (!string.IsNullOrWhiteSpace(searchText))
+    {
+        query = query.Where(p => p.Description!.Contains(searchText));
+    }
+
+    var photos = await query.ToListAsync();
     return photos;
 })
 .WithName("GetPhotos")
@@ -52,6 +66,21 @@ app.MapGet("/photos/{id:guid}", async (Guid id, AzureStorageService azureStorage
 .Produces(StatusCodes.Status200OK)
 .Produces(StatusCodes.Status404NotFound)
 .WithName("GetPhoto");
+
+app.MapGet("/photos/{id:guid}/comments", async (Guid id, PhotoGalleryDbContext db) =>
+{
+    var photoExists = await db.Photos.AnyAsync(p => p.Id == id);
+    if (!photoExists)
+    {
+        return Results.NotFound();
+    }
+
+    var comments = await db.Comments.Where(c => c.PhotoId == id).OrderBy(c => c.Date).ToListAsync();
+    return Results.Ok(comments);
+})
+.Produces(StatusCodes.Status200OK, typeof(IEnumerable<Comment>))
+.Produces(StatusCodes.Status404NotFound)
+.WithName("GetPhotoComments");
 
 app.MapPost("photos", async (FormFileContent file, string? description, AzureStorageService storageService, PhotoGalleryDbContext db) =>
 {

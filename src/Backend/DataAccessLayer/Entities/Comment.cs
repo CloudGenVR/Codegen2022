@@ -10,5 +10,7 @@ public class Comment
 
     public string Text { get; set; } = null!;
 
+    public double SentimentScore { get; set; }
+
     public virtual Photo Photo { get; set; } = null!;
 }
