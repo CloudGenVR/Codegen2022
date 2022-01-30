@@ -131,7 +131,7 @@ app.MapPost("photos", async (FormFileContent file, string? description, AzureSto
 .Produces(StatusCodes.Status400BadRequest)
 .WithName("UploadPhoto");
 
-app.MapPut("/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
+app.MapPost("/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
 {
     var validationResult = validator.Validate(comment);
     if (!validationResult.IsValid)
