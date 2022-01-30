@@ -16,15 +16,12 @@ builder.Services.AddSqlServer<PhotoGalleryDbContext>(builder.Configuration.GetCo
 builder.Services.AddScoped<AzureStorageService>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options => options.OperationFilter<UploadOperationFilter>());
+builder.Services.AddSwaggerGen(options => options.OperationFilter<FormFileOperationFilter>());
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
@@ -81,7 +78,7 @@ app.MapPost("photos", async (FormFileContent file, string? description, AzureSto
     return Results.CreatedAtRoute("GetPhoto", new { id }, photo);
 })
 .WithName("UploadPhoto")
-.WithMetadata(UploadOperationFilter.UploadOperation)
+.Accepts<FormFileContent>("multipart/form-data")
 .Produces(StatusCodes.Status201Created, typeof(Photo))
 .Produces(StatusCodes.Status400BadRequest);
 

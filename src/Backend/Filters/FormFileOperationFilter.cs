@@ -1,16 +1,18 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.OpenApi.Models;
+using PhotoGallery.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace PhotoGallery.Filters;
 
-public class UploadOperationFilter : IOperationFilter
+public class FormFileOperationFilter : IOperationFilter
 {
-    public const string UploadOperation = nameof(UploadOperation);
-
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        var isUploadMethod = context.ApiDescription.ActionDescriptor.EndpointMetadata.Any(p => p.ToString() == UploadOperation);
-        if (isUploadMethod)
+        var acceptsFormFile = context.ApiDescription.ActionDescriptor.EndpointMetadata.OfType<IAcceptsMetadata>()
+            .Any(m => m.RequestType == typeof(IFormFile) || m.RequestType == typeof(FormFileContent));
+
+        if (acceptsFormFile)
         {
             operation.RequestBody = new OpenApiRequestBody
             {
