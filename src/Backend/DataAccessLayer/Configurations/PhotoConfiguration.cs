@@ -13,7 +13,7 @@ public class PhotoConfiguration : IEntityTypeConfiguration<Photo>
 
         builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
-        builder.Property(e => e.Name).HasMaxLength(256).IsRequired().IsUnicode(false);
-        builder.Property(e => e.Path).HasMaxLength(256).IsRequired().IsUnicode(false);
+        builder.Property(p => p.Name).HasMaxLength(256).IsRequired().IsUnicode(false);
+        builder.Property(p => p.Path).HasMaxLength(512).IsRequired().IsUnicode(false);
     }
 }

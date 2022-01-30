@@ -82,6 +82,20 @@ app.MapGet("/photos/{id:guid}/comments", async (Guid id, PhotoGalleryDbContext d
 .Produces(StatusCodes.Status404NotFound)
 .WithName("GetPhotoComments");
 
+app.MapGet("/photos/{photoId:guid}/comments/{commentId:guid}", async (Guid photoId, Guid commentId, PhotoGalleryDbContext db) =>
+{
+    var comment = await db.Comments.FirstOrDefaultAsync(c => c.PhotoId == photoId && c.Id == commentId);
+    if (comment is null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(comment);
+})
+.Produces(StatusCodes.Status200OK, typeof(Comment))
+.Produces(StatusCodes.Status404NotFound)
+.WithName("GetPhotoComment");
+
 app.MapPost("photos", async (FormFileContent file, string? description, AzureStorageService storageService, PhotoGalleryDbContext db) =>
 {
     using var stream = file.Content.OpenReadStream();
@@ -110,6 +124,31 @@ app.MapPost("photos", async (FormFileContent file, string? description, AzureSto
 .Accepts<FormFileContent>("multipart/form-data")
 .Produces(StatusCodes.Status201Created, typeof(Photo))
 .Produces(StatusCodes.Status400BadRequest);
+
+app.MapPut("/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db) =>
+{
+    var photoExists = await db.Photos.AnyAsync(p => p.Id == id);
+    if (!photoExists)
+    {
+        return Results.NotFound();
+    }
+
+    var dbComment = new Comment
+    {
+        PhotoId = id,
+        Date = DateTime.UtcNow,
+        Text = comment.Text,
+        SentimentScore = Random.Shared.NextDouble()
+    };
+
+    db.Comments.Add(dbComment);
+    await db.SaveChangesAsync();
+
+    return Results.CreatedAtRoute("GetPhotoComment", new { PhotoId = id, CommentId = dbComment.Id }, dbComment);
+})
+.Produces(StatusCodes.Status201Created, typeof(Comment))
+.Produces(StatusCodes.Status404NotFound)
+.WithName("AddPhotoComment");
 
 app.MapDelete("/photos/{id:guid}", async (Guid id, AzureStorageService storageService, PhotoGalleryDbContext db) =>
 {
