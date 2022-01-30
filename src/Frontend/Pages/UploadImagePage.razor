@@ -1,6 +1,59 @@
 ﻿@page "/upload-image"
-<h3>UploadImagePage</h3>
+@using System.ComponentModel.DataAnnotations
+@using Frontend.Services
+@inject IMinimalService MinimalService
 
-@code {
+<PageTitle>Upload</PageTitle>
 
+<MudGrid>
+    <MudItem xs=12 lg=12 md=12>
+        <ImageEditerComponent ImageLoaded=OnUploadImage ></ImageEditerComponent>
+    </MudItem>
+    <MudItem xs=12 lg=12 md=12>
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit" @ref=form>
+            <DataAnnotationsValidator/>
+            <MudCardContent>
+                <MudTextField Label="Description" HelperText="Min. 8 characters" Lines=10
+                              @bind-Value="model.Description" For="@(() => model.Description)"/>
+                <div hidden>
+                    <MudCheckBox T=bool Label="Upload" hidden
+                              @bind-Value="model.IsUploadedImage" For="@(() => model.IsUploadedImage)"/>
+                </div>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Upload</MudButton>
+            </MudCardActions>
+        </EditForm>
+    </MudItem>
+</MudGrid>
+
+
+
+@code{
+    public IBrowserFile imageToUpload = null!;
+    public ImageFormModel model = new ImageFormModel();
+    private EditForm form;
+    private void OnUploadImage(IBrowserFile e)
+    {
+        imageToUpload = e;
+        model.IsUploadedImage = true;
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await MinimalService.UploadPhoto(model.Description!, imageToUpload);
+        model = new ImageFormModel();
+        StateHasChanged();
+    }
+
+    public class ImageFormModel
+    {
+        [Required]
+        [StringLength(20000, MinimumLength = 8, ErrorMessage = "Description length can't be more than 4.")]
+        public string? Description { get; set; }
+
+        [Required(ErrorMessage = "Image is not uploaded")]
+        [Range(typeof(bool), "true", "true")]
+        public bool IsUploadedImage { get; set; }
+    }
 }

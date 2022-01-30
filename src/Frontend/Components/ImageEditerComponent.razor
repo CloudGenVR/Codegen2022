@@ -1,0 +1,25 @@
+﻿<InputFile id="fileInput" OnChange="UploadFiles" hidden accept=".jpg, .jpeg, .png"/>
+
+<MudButton HtmlTag="label"
+           Variant="Variant.Filled"
+           Color="Color.Primary"
+           StartIcon="@Icons.Filled.CloudUpload"
+           for="fileInput">
+    Upload Image
+</MudButton>
+
+@code {
+
+    [Parameter]
+    public EventCallback<IBrowserFile> ImageLoaded { get; set; }
+
+    IBrowserFile? imageToUpload;
+    private void UploadFiles(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            imageToUpload = file;
+        }
+        ImageLoaded.InvokeAsync(imageToUpload);
+    }
+}
