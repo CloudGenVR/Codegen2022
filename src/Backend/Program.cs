@@ -4,6 +4,7 @@ using FluentValidation.AspNetCore;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Net.Http.Headers;
 using MimeMapping;
 using PhotoGallery.DataAccessLayer;
 using PhotoGallery.DataAccessLayer.Entities;
@@ -31,7 +32,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.OperationFilter<FormFileOperationFilter>());
 builder.Services.AddFluentValidationRulesToSwagger();
 
+builder.Services.AddCors(o => o.AddDefaultPolicy(builder =>
+{
+    builder
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .WithExposedHeaders(HeaderNames.ContentDisposition);
+}));
+
 var app = builder.Build();
+app.UseHttpsRedirection();
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
@@ -40,7 +51,7 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "PhotoGallery API v1");
 });
 
-app.UseHttpsRedirection();
+app.UseCors();
 
 app.MapGet("/api/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] string? searchText) =>
 {
