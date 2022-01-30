@@ -57,7 +57,21 @@ app.MapGet("/api/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q"
 .Produces(StatusCodes.Status200OK, typeof(IEnumerable<Photo>))
 .WithName("GetPhotos");
 
-app.MapGet("/api/photos/{id:guid}", async (Guid id, AzureStorageService azureStorageService, PhotoGalleryDbContext db) =>
+app.MapGet("/api/photos/{id:guid}", async (Guid id, PhotoGalleryDbContext db) =>
+{
+    var photo = await db.Photos.FindAsync(id);
+    if (photo is null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Ok(photo);
+})
+.Produces(StatusCodes.Status200OK, typeof(Photo))
+.Produces(StatusCodes.Status404NotFound)
+.WithName("GetPhoto");
+
+app.MapGet("/api/photos/{id:guid}/image", async (Guid id, AzureStorageService azureStorageService, PhotoGalleryDbContext db) =>
 {
     var photo = await db.Photos.FindAsync(id);
     if (photo is null)
@@ -75,7 +89,7 @@ app.MapGet("/api/photos/{id:guid}", async (Guid id, AzureStorageService azureSto
 })
 .Produces(StatusCodes.Status200OK)
 .Produces(StatusCodes.Status404NotFound)
-.WithName("GetPhoto");
+.WithName("GetPhotoStream");
 
 app.MapGet("/api/photos/{id:guid}/comments", async (Guid id, PhotoGalleryDbContext db) =>
 {
