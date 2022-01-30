@@ -1,0 +1,25 @@
+﻿@using Frontend.Models
+
+@if(Photo!= null)
+{
+    <MudCard>
+        <MudCardMedia Image="@(Photo.Path)" Height="200" />
+        <MudCardContent>
+            <MudText Typo=Typo.h4>@Photo.Name</MudText>
+            <MudText Typo="Typo.body2">@Photo.Description</MudText>
+            <span class="d-flex justify-end py-2 px-1 mt-6">
+                <MudChip 
+                    Icon="@Icons.Material.Filled.EditCalendar"
+                    IconColor="Color.Error">@Photo.Date.ToString("dd/MM/yyyy HH:mm:ss")</MudChip>
+            </span>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Filled.EditNote">Dettaglio</MudButton>
+        </MudCardActions>
+    </MudCard>   
+}
+
+@code {
+    [Parameter]
+    public Photo Photo { get; set; } = null!;
+}

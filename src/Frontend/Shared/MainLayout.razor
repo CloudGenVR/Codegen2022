@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme=@Theme />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
@@ -13,7 +13,7 @@
         <NavMenu/>
     </MudDrawer>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-2 ma-4">
             @Body
         </MudContainer>
     </MudMainContent>
@@ -25,4 +25,13 @@
     {
         _drawerOpen = !_drawerOpen;
     }
+
+    MudTheme Theme = new MudTheme
+    {
+        Palette = new Palette
+        {
+            Primary = new MudBlazor.Utilities.MudColor("#333"),
+            AppbarBackground = new MudBlazor.Utilities.MudColor("#333")
+        },        
+    };
 }

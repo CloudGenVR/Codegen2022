@@ -1,8 +1,41 @@
 ﻿@page "/"
+@using Frontend.Models
+@using Frontend.Services
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Search</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudGrid>
+    <MudItem xs="12">
+        <MudTextField 
+            @bind-Value="SearchImages"
+            Label="Ricerca una immagine"
+            HelperText="Ricerca una immagine per nome o descrizione"
+            Variant="Variant.Outlined"/>
+    </MudItem>
+</MudGrid>
 
-Welcome to your new app.
+@if(Photos?.Length > 0)
+{
+    <MudGrid Spacing="2" Justify="Justify.Center" Class="md">
+        @foreach(var p in Photos)
+        {
+            <MudItem xs=12 md=6 lg=4>
+                <ImageViewerComponent Photo=p></ImageViewerComponent>
+            </MudItem>   
+        }
+    </MudGrid>   
+}
 
+
+@code{
+    public Photo[]? Photos { get; set; }
+
+    [Inject]
+    public IMinimalService? MinimalService { get; set; }
+    protected string? SearchImages = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Photos = await MinimalService?.SearchImagesAsync()!;
+    }
+}
