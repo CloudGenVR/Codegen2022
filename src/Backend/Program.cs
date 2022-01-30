@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimeMapping;
@@ -28,6 +29,7 @@ builder.Services.AddScoped<AzureStorageService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.OperationFilter<FormFileOperationFilter>());
+builder.Services.AddFluentValidationRulesToSwagger();
 
 var app = builder.Build();
 
@@ -48,8 +50,8 @@ app.MapGet("/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] s
     var photos = await query.ToListAsync();
     return photos;
 })
-.WithName("GetPhotos")
-.Produces(StatusCodes.Status200OK, typeof(IEnumerable<Photo>));
+.Produces(StatusCodes.Status200OK, typeof(IEnumerable<Photo>))
+.WithName("GetPhotos");
 
 app.MapGet("/photos/{id:guid}", async (Guid id, AzureStorageService azureStorageService, PhotoGalleryDbContext db) =>
 {
@@ -124,10 +126,10 @@ app.MapPost("photos", async (FormFileContent file, string? description, AzureSto
 
     return Results.CreatedAtRoute("GetPhoto", new { id }, photo);
 })
-.WithName("UploadPhoto")
 .Accepts<FormFileContent>("multipart/form-data")
 .Produces(StatusCodes.Status201Created, typeof(Photo))
-.Produces(StatusCodes.Status400BadRequest);
+.Produces(StatusCodes.Status400BadRequest)
+.WithName("UploadPhoto");
 
 app.MapPut("/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
 {
@@ -179,8 +181,25 @@ app.MapDelete("/photos/{id:guid}", async (Guid id, AzureStorageService storageSe
 
     return Results.NoContent();
 })
-.WithName("DeletePhoto")
 .Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status404NotFound);
+.Produces(StatusCodes.Status404NotFound)
+.WithName("DeletePhoto");
+
+app.MapDelete("/photos/{photoId:guid}/comments/{commentId:guid}", async (Guid photoId, Guid commentId, PhotoGalleryDbContext db) =>
+{
+    var comment = await db.Comments.FirstOrDefaultAsync(c => c.PhotoId == photoId && c.Id == commentId);
+    if (comment is null)
+    {
+        return Results.NotFound();
+    }
+
+    db.Comments.Remove(comment);
+    await db.SaveChangesAsync();
+
+    return Results.NoContent();
+})
+.Produces(StatusCodes.Status204NoContent)
+.Produces(StatusCodes.Status404NotFound)
+.WithName("DeleteComment");
 
 app.Run();
