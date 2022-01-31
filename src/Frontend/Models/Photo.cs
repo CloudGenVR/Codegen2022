@@ -14,5 +14,7 @@ public class Photo
 
     public string? Description { get; set; }
 
+    public byte[] Image { get; set; } = null!;
+
     public virtual Comment[]? Comments { get; set; }
 }

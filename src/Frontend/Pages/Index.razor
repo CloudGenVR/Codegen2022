@@ -10,7 +10,9 @@
             @bind-Value="SearchImages"
             Label="Ricerca una immagine"
             HelperText="Ricerca una immagine per nome o descrizione"
-            Variant="Variant.Outlined"/>
+            Variant="Variant.Outlined"
+            DebounceInterval=1000
+            OnDebounceIntervalElapsed="OnSearch"/>
     </MudItem>
 </MudGrid>
 
@@ -20,7 +22,7 @@
         @foreach(var p in Photos)
         {
             <MudItem xs=12 md=6 lg=4>
-                <ImageViewerComponent Photo=p></ImageViewerComponent>
+                <ImageViewerComponent Photo=p ></ImageViewerComponent>
             </MudItem>   
         }
     </MudGrid>   
@@ -34,8 +36,24 @@
     public IMinimalService? MinimalService { get; set; }
     protected string? SearchImages = null;
 
-    protected override async Task OnInitializedAsync()
+    private async Task OnSearch(string search)
     {
-        Photos = await MinimalService?.SearchImagesAsync()!;
+        await SearchImagesAsync();
+        StateHasChanged();
+    }
+
+    private async Task SearchImagesAsync()
+    {
+        Photos = await MinimalService?.SearchImagesAsync(SearchImages!)!;
+        StateHasChanged();
+        foreach(var p in Photos)
+        {
+            p.Image = await DownloadImageAsync(p.Id)!;
+        }
+    }
+
+    private async ValueTask<byte[]> DownloadImageAsync(Guid imageId)
+    {
+        return await MinimalService?.DownloadImageAsync(imageId)!;
     }
 }

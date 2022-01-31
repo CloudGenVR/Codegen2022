@@ -1,25 +1,69 @@
 ﻿@using Frontend.Models
+@using System.Text
+@inject NavigationManager navigation
+@inject ISnackbar snackbar
 
 @if(Photo!= null)
 {
-    <MudCard>
-        <MudCardMedia Image="@(Photo.Path)" Height="200" />
+    <MudCard Elevation=4>
+        <MudCardHeader>
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Secondary">@Photo?.Description?.FirstOrDefault()</MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.body1"></MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <span class="d-flex justify-end">
+                    <MudIconButton 
+                        Icon="@Icons.Material.Filled.Settings"
+                        Color="Color.Default"
+                        OnClick="ImageConfiguration"/>
+                </span>
+            </CardHeaderActions>
+        </MudCardHeader>
+
+        @if(@Photo?.Image == null )
+        {
+            <span class="d-flex justify-center align-center align-stretch" Style="height:200px;">
+                <MudProgressCircular Color="Color.Default" Indeterminate="true" Style="height:70px;width:70px;" />
+            </span>
+        }
+        else
+        {
+            <MudCardMedia 
+                Image="@($"data:image/png;base64,{Convert.ToBase64String(Photo?.Image!)}")"
+                Height="200" />
+        }
         <MudCardContent>
-            <MudText Typo=Typo.h4>@Photo.Name</MudText>
-            <MudText Typo="Typo.body2">@Photo.Description</MudText>
+            <MudText Typo="Typo.body2">@Photo?.Description</MudText>
             <span class="d-flex justify-end py-2 px-1 mt-6">
                 <MudChip 
                     Icon="@Icons.Material.Filled.EditCalendar"
-                    IconColor="Color.Error">@Photo.Date.ToString("dd/MM/yyyy HH:mm:ss")</MudChip>
+                    IconColor="Color.Error">@Photo?.Date.ToString("dd/MM/yyyy HH:mm:ss")</MudChip>
             </span>
         </MudCardContent>
         <MudCardActions>
-            <MudButton Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Filled.EditNote">Dettaglio</MudButton>
+            <MudButton 
+                Variant="Variant.Text" 
+                Color="Color.Primary" 
+                EndIcon="@Icons.Filled.Comment" 
+                OnClick="NavigateToPhotoDetail">Comment</MudButton>
         </MudCardActions>
     </MudCard>   
 }
 
 @code {
-    [Parameter]
+    [Parameter, EditorRequired]
     public Photo Photo { get; set; } = null!;
+
+    public void NavigateToPhotoDetail()
+    {
+        navigation.NavigateTo($"Detail/{Photo.Id}");
+    }
+
+    public void ImageConfiguration()
+    {
+        snackbar.Add("Configuration is coming", Severity.Info, (s) => s.RequireInteraction = true);
+    }
 }
