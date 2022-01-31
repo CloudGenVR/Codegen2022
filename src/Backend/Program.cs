@@ -59,7 +59,7 @@ app.MapGet("/api/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q"
 
     if (!string.IsNullOrWhiteSpace(searchText))
     {
-        query = query.Where(p => p.Description!.Contains(searchText));
+        query = query.Where(p => p.Name.Contains(searchText) || p.Description!.Contains(searchText));
     }
 
     var photos = await query.ToListAsync();
