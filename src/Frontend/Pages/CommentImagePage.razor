@@ -22,7 +22,16 @@
     <RowTemplate>
         <MudTd DataLabel="Date">@context.Date.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</MudTd>
         <MudTd DataLabel="Text">@context.Text</MudTd>
-        <MudTd DataLabel="Sentiment Score">@context.SentimentScore</MudTd>
+        <MudTd DataLabel="Sentiment Score">
+                @if (context.SentimentScore > 0 && context.SentimentScore <= 0.5f)
+                {
+                    <MudChip Icon="@Icons.Material.Filled.Percent" Color="Color.Error">@(context.SentimentScore * 100)</MudChip>
+                }
+                else
+                {
+                    <MudChip Icon="@Icons.Material.Filled.Percent" Color="Color.Success">@(context.SentimentScore * 100)</MudChip>
+                }
+        </MudTd>
     </RowTemplate>
 </MudTable>
 }
