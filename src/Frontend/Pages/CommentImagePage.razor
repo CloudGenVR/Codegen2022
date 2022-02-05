@@ -53,6 +53,7 @@
     {
         await minimalService.AddCommentAsync(id, new Comment() { Text = NewComment.Text! });
         await LoadCommentsAsync(id);
+        NewComment.Text = string.Empty;
         StateHasChanged();
     }
 
