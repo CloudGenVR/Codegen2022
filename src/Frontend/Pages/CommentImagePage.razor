@@ -17,10 +17,12 @@
     <HeaderContent>
         <MudTh>Date</MudTh>
         <MudTh>Text</MudTh>
+        <MudTh>Sentiment Score</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Date">@context.Date.ToString("yyyy/MM/dd HH:mm:ss")</MudTd>
+        <MudTd DataLabel="Date">@context.Date.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")</MudTd>
         <MudTd DataLabel="Text">@context.Text</MudTd>
+        <MudTd DataLabel="Sentiment Score">@context.SentimentScore</MudTd>
     </RowTemplate>
 </MudTable>
 }

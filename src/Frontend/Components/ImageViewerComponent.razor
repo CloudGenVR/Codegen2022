@@ -41,7 +41,7 @@
             <span class="d-flex justify-end py-2 px-1 mt-6">
                 <MudChip 
                     Icon="@Icons.Material.Filled.EditCalendar"
-                    IconColor="Color.Error">@Photo?.Date.ToString("dd/MM/yyyy HH:mm:ss")</MudChip>
+                    IconColor="Color.Error">@Photo?.Date.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</MudChip>
             </span>
         </MudCardContent>
         <MudCardActions>

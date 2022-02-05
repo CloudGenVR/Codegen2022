@@ -9,4 +9,6 @@ public class Comment
     public DateTime Date { get; set; }
 
     public string Text { get; set; } = null!;
+
+    public float SentimentScore { get; set; }
 }
