@@ -20,7 +20,7 @@ public class MinimalService : IMinimalService
     public Task<byte[]> DownloadImageAsync(Guid photoId) =>
         client.GetByteArrayAsync($"photos/{photoId}/image")!;
 
-    public async Task<Photo> UploadPhoto(string description, IBrowserFile imageForm)
+    public async Task<Photo> UploadPhotoAsync(string description, IBrowserFile imageForm)
     {
         await using var ms = new MemoryStream();
         await imageForm.OpenReadStream().CopyToAsync(ms);
@@ -34,4 +34,9 @@ public class MinimalService : IMinimalService
         var messageText = await responseMessage.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<Photo>(messageText)!;
     }
+
+    public async Task AddCommentAsync(Guid photoId, Comment comment) =>
+        await client.PostAsJsonAsync($"photos/{photoId}/comments", comment);
+    public async Task<Comment[]?> GetCommentAsync(Guid photoId) =>
+        await client.GetFromJsonAsync<Comment[]?>($"photos/{photoId}/comments");
 }

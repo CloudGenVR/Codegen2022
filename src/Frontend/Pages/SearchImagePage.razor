@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using Frontend.Models
 @using Frontend.Services
+@inject NavigationManager navigation
 
 <PageTitle>Search</PageTitle>
 
@@ -22,7 +23,8 @@
         @foreach(var p in Photos)
         {
             <MudItem xs=12 md=6 lg=4>
-                <ImageViewerComponent Photo=p ></ImageViewerComponent>
+                <ImageViewerComponent Photo=p 
+                NavigateToPhotoCommentEvent="@NavigateToComments" ></ImageViewerComponent>
             </MudItem>   
         }
     </MudGrid>   
@@ -49,7 +51,13 @@
         foreach(var p in Photos)
         {
             p.Image = await DownloadImageAsync(p.Id)!;
+            StateHasChanged();
         }
+    }
+
+    private void NavigateToComments(Guid photoId)
+    {
+        navigation.NavigateTo($"image/{photoId}/comments");
     }
 
     private async ValueTask<byte[]> DownloadImageAsync(Guid imageId)

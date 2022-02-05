@@ -41,7 +41,7 @@
 
     private async Task OnValidSubmit(EditContext context)
     {
-        await MinimalService.UploadPhoto(model.Description!, imageToUpload);
+        await MinimalService.UploadPhotoAsync(model.Description!, imageToUpload);
         model = new ImageFormModel();
         StateHasChanged();
     }

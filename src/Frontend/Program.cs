@@ -12,4 +12,5 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://photogallerybackend.azurewebsites.net/api/") });
 
 builder.Services.AddScoped<IMinimalService, MinimalService>();
+builder.Services.AddScoped<ScopedStore>();
 await builder.Build().RunAsync();

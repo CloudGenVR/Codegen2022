@@ -1,7 +1,8 @@
 ﻿@using Frontend.Models
 @using System.Text
-@inject NavigationManager navigation
+@using Frontend.Services
 @inject ISnackbar snackbar
+@inject ScopedStore scopedStore
 
 @if(Photo!= null)
 {
@@ -48,7 +49,7 @@
                 Variant="Variant.Text" 
                 Color="Color.Primary" 
                 EndIcon="@Icons.Filled.Comment" 
-                OnClick="NavigateToPhotoDetail">Comment</MudButton>
+                OnClick="NavigateToPhotoComment">Comment</MudButton>
         </MudCardActions>
     </MudCard>   
 }
@@ -56,10 +57,17 @@
 @code {
     [Parameter, EditorRequired]
     public Photo Photo { get; set; } = null!;
+    [Parameter]
+    public EventCallback<Guid> NavigateToPhotoCommentEvent { get; set; }
 
-    public void NavigateToPhotoDetail()
+    protected override void OnInitialized()
     {
-        navigation.NavigateTo($"Detail/{Photo.Id}");
+        scopedStore.PhotoSelected = Photo;
+    }
+
+    public void NavigateToPhotoComment()
+    {
+        NavigateToPhotoCommentEvent.InvokeAsync(Photo.Id);
     }
 
     public void ImageConfiguration()

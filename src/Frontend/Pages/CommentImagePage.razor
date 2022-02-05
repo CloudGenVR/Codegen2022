@@ -1,0 +1,71 @@
+﻿@page "/image/{id:guid}/comments"
+@using Frontend.Models
+@using Frontend.Services
+@using System.ComponentModel.DataAnnotations
+@inject ScopedStore scopedStore
+@inject IMinimalService minimalService
+
+<PageTitle>Comment Image</PageTitle>
+
+@if(CurrentPhoto.Comments?.Any() ?? false)
+{
+    <MudTable 
+        FixedHeader="true" FixedFooter="true"
+        Items="@CurrentPhoto?.Comments"
+        Hover="true" 
+        Breakpoint="Breakpoint.Sm">
+    <HeaderContent>
+        <MudTh>Date</MudTh>
+        <MudTh>Text</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Date">@context.Date.ToString("yyyy/MM/dd HH:mm:ss")</MudTd>
+        <MudTd DataLabel="Text">@context.Text</MudTd>
+    </RowTemplate>
+</MudTable>
+}
+
+<EditForm Model=NewComment OnSubmit=AddCommentAsync>
+    <DataAnnotationsValidator/>
+    <MudCardContent>
+        <MudTextField Label="Comment" HelperText="Min. 8 characters" Lines=10
+            @bind-Value="NewComment.Text" For="@(() => NewComment.Text)"/>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">Add Comment</MudButton>
+    </MudCardActions>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Guid id { get; set; }
+
+    private Photo CurrentPhoto { get; set; } = new Photo();
+    private CommentModel NewComment { get; set; } = new CommentModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentPhoto = scopedStore.PhotoSelected!;
+        await LoadCommentsAsync(id);
+    }
+
+    protected async Task AddCommentAsync()
+    {
+        await minimalService.AddCommentAsync(id, new Comment() { Text = NewComment.Text! });
+        await LoadCommentsAsync(id);
+        StateHasChanged();
+    }
+
+    private async Task LoadCommentsAsync(Guid photoId)
+    {
+        var comments = await minimalService.GetCommentAsync(photoId);
+        CurrentPhoto.Comments = comments;
+    }
+
+    public class CommentModel
+    {
+        [Required]
+        [StringLength(20000, MinimumLength = 8, ErrorMessage = "Comment length can't be more than 8 chars.")]
+        public string? Text { get; set; }
+    }
+}
