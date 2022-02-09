@@ -11,6 +11,7 @@ using PhotoGallery.DataAccessLayer.Entities;
 using PhotoGallery.Filters;
 using PhotoGallery.Models;
 using PhotoGallery.Services;
+using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureAppConfiguration(app =>
@@ -27,6 +28,12 @@ builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyCont
 
 builder.Services.AddSqlServer<PhotoGalleryDbContext>(builder.Configuration.GetConnectionString("SqlConnection"));
 builder.Services.AddScoped<AzureStorageService>();
+
+builder.Services.AddRefitClient<ISentimentApi>()
+    .ConfigureHttpClient(client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppSettings:SentimentServiceUrl"));
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.OperationFilter<FormFileOperationFilter>());
@@ -160,7 +167,8 @@ app.MapPost("/api/photos", async (FormFileContent file, string? description, Azu
 .Produces(StatusCodes.Status400BadRequest)
 .WithName("UploadPhoto");
 
-app.MapPost("/api/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
+app.MapPost("/api/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator,
+    ISentimentApi sentimentApi) =>
 {
     var validationResult = validator.Validate(comment);
     if (!validationResult.IsValid)
