@@ -55,7 +55,7 @@ app.UseCors();
 
 app.MapGet("/api/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] string? searchText) =>
 {
-    var query = db.Photos.OrderBy(p => p.Name).AsQueryable();
+    var query = db.Photos.AsNoTracking().OrderBy(p => p.Name).AsQueryable();
 
     if (!string.IsNullOrWhiteSpace(searchText))
     {
