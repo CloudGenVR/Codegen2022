@@ -16,12 +16,17 @@ public class PredictController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<SentimentDataResult> Post([FromBody] SentimentData input)
+    public ActionResult<SentimentDataResult> Post([FromBody] SentimentDataRequest request)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest();
         }
+        SentimentData input = new SentimentData
+        {
+            Sentiment = request.Sentiment,
+            SentimentText = request.SentimentText
+        };
 
         SentimentPrediction prediction = _predictionEnginePool.Predict(modelName: "SentimentAnalysisModel", example: input);
 
