@@ -16,7 +16,7 @@ public class PredictController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<string> Post([FromBody] SentimentData input)
+    public ActionResult<SentimentDataResult> Post([FromBody] SentimentData input)
     {
         if (!ModelState.IsValid)
         {
@@ -25,8 +25,15 @@ public class PredictController : ControllerBase
 
         SentimentPrediction prediction = _predictionEnginePool.Predict(modelName: "SentimentAnalysisModel", example: input);
 
-        string sentiment = Convert.ToBoolean(prediction.Prediction) ? "Positive" : "Negative";
+        if (prediction == null)
+            throw new ArgumentNullException();
 
-        return Ok(sentiment);
+        var result = new SentimentDataResult
+        {
+            Prediction = prediction.Prediction,
+            Probability = prediction.Probability,
+            Score = prediction.Score
+        };
+        return Ok(result);
     }
 }
