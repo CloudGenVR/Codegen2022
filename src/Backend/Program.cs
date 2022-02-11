@@ -30,10 +30,10 @@ builder.Services.AddSqlServer<PhotoGalleryDbContext>(builder.Configuration.GetCo
 builder.Services.AddScoped<AzureStorageService>();
 
 builder.Services.AddRefitClient<ISentimentApi>()
-    .ConfigureHttpClient(client =>
-    {
-        client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppSettings:SentimentServiceUrl"));
-    });
+.ConfigureHttpClient(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppSettings:SentimentServiceUrl"));
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.OperationFilter<FormFileOperationFilter>());
@@ -185,12 +185,15 @@ app.MapPost("/api/photos/{id:guid}/comments", async (Guid id, NewComment comment
         return Results.NotFound();
     }
 
+    using var sentimentResponse = await sentimentApi.GetPredictionAsync(new SentimentDataRequest(comment.Text));
+    await sentimentResponse.EnsureSuccessStatusCodeAsync();
+
     var dbComment = new Comment
     {
         PhotoId = id,
         Date = DateTime.UtcNow,
         Text = comment.Text,
-        SentimentScore = Random.Shared.NextDouble()
+        SentimentScore = sentimentResponse.Content!.Probability
     };
 
     db.Comments.Add(dbComment);
