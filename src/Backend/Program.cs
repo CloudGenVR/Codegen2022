@@ -11,6 +11,7 @@ using PhotoGallery.DataAccessLayer.Entities;
 using PhotoGallery.Filters;
 using PhotoGallery.Models;
 using PhotoGallery.Services;
+using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureAppConfiguration(app =>
@@ -27,6 +28,12 @@ builder.Services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyCont
 
 builder.Services.AddSqlServer<PhotoGalleryDbContext>(builder.Configuration.GetConnectionString("SqlConnection"));
 builder.Services.AddScoped<AzureStorageService>();
+
+builder.Services.AddRefitClient<ISentimentApi>()
+.ConfigureHttpClient(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("AppSettings:SentimentServiceUrl"));
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => options.OperationFilter<FormFileOperationFilter>());
@@ -55,7 +62,7 @@ app.UseCors();
 
 app.MapGet("/api/photos", async (PhotoGalleryDbContext db, [FromQuery(Name = "q")] string? searchText) =>
 {
-    var query = db.Photos.OrderBy(p => p.Name).AsQueryable();
+    var query = db.Photos.AsNoTracking().OrderBy(p => p.Name).AsQueryable();
 
     if (!string.IsNullOrWhiteSpace(searchText))
     {
@@ -160,7 +167,8 @@ app.MapPost("/api/photos", async (FormFileContent file, string? description, Azu
 .Produces(StatusCodes.Status400BadRequest)
 .WithName("UploadPhoto");
 
-app.MapPost("/api/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator) =>
+app.MapPost("/api/photos/{id:guid}/comments", async (Guid id, NewComment comment, PhotoGalleryDbContext db, IValidator<NewComment> validator,
+    ISentimentApi sentimentApi) =>
 {
     var validationResult = validator.Validate(comment);
     if (!validationResult.IsValid)
@@ -177,12 +185,15 @@ app.MapPost("/api/photos/{id:guid}/comments", async (Guid id, NewComment comment
         return Results.NotFound();
     }
 
+    using var sentimentResponse = await sentimentApi.GetPredictionAsync(new SentimentDataRequest(comment.Text));
+    await sentimentResponse.EnsureSuccessStatusCodeAsync();
+
     var dbComment = new Comment
     {
         PhotoId = id,
         Date = DateTime.UtcNow,
         Text = comment.Text,
-        SentimentScore = Random.Shared.NextDouble()
+        SentimentScore = sentimentResponse.Content!.Probability
     };
 
     db.Comments.Add(dbComment);
