@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddPredictionEnginePool<SentimentData, SentimentPrediction>()
-    .FromFile(modelName: "SentimentAnalysisModel", filePath: "MLModels/sentiment_model.zip", watchForChanges: true);
+    .FromFile(modelName: "MLModels", filePath: "MLModels/MLModels.zip", watchForChanges: true);
 
 //// Possiamo usare in alternativa anche il metodo uri
 //   builder.Services.AddPredictionEnginePool<SentimentData, SentimentPrediction>()

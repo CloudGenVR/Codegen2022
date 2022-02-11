@@ -28,7 +28,7 @@ public class PredictController : ControllerBase
             SentimentText = request.SentimentText
         };
 
-        SentimentPrediction prediction = _predictionEnginePool.Predict(modelName: "SentimentAnalysisModel", example: input);
+        SentimentPrediction prediction = _predictionEnginePool.Predict(modelName: "MLModels", example: input);
 
         if (prediction == null)
             throw new ArgumentNullException();
