@@ -117,7 +117,7 @@ app.MapGet("/api/photos/{id:guid}/comments", async (Guid id, PhotoGalleryDbConte
         return Results.NotFound();
     }
 
-    var comments = await db.Comments.Where(c => c.PhotoId == id).OrderBy(c => c.Date).ToListAsync();
+    var comments = await db.Comments.AsNoTracking().Where(c => c.PhotoId == id).OrderBy(c => c.Date).ToListAsync();
     return Results.Ok(comments);
 })
 .Produces(StatusCodes.Status200OK, typeof(IEnumerable<Comment>))
